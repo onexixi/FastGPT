@@ -73,9 +73,9 @@ instance.interceptors.request.use(requestStart, (err) => Promise.reject(err));
 instance.interceptors.response.use(responseSuccess, (err) => Promise.reject(err));
 
 export function request(url: string, data: any, config: ConfigType, method: Method): any {
-  if (!global.systemEnv?.pluginBaseUrl) {
-    return Promise.reject('商业版插件加载中...');
-  }
+  // if (!global.systemEnv?.pluginBaseUrl) {
+  //   return Promise.reject('商业版插件加载中...');
+  // }
 
   /* 去空 */
   for (const key in data) {
