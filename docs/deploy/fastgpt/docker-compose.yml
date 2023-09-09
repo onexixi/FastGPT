@@ -33,8 +33,8 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=username
       - MONGO_INITDB_ROOT_PASSWORD=password
     volumes:
-      -  /home/fastgpt/FastGPT/docs/deploy/fastgpt/mongo/data:/data/db
-      -  /home/fastgpt/FastGPT/docs/deploy/fastgpt/mongo/logs:/var/log/mongodb
+      -  /home/fastgptv4/FastGPT/docs/deploy/fastgpt/mongo/data:/data/db
+      -  /home/fastgptv4/FastGPT/docs/deploy/fastgpt/mongo/logs:/var/log/mongodb
   fastgpt:
     container_name: fastgpt
     # image: c121914yu/fast-gpt:latest # docker hub
