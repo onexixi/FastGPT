@@ -113,5 +113,6 @@ services:
       # 刚创建的文件
       - /home/fastgpt/FastGPT/docs/deploy/fastgpt/nginx
       - /home/fastgpt/FastGPT/docs/deploy/fastgpt/nginx/logs:/var/log/nginx
+      - ./config.json:/app/data/config.json
 networks:
   fastgpt:
