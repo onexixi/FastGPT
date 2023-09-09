@@ -39,7 +39,7 @@ const Hero = () => {
               color: 'white'
             }}
             leftIcon={<MyIcon name={'git'} w={'20px'} />}
-            onClick={() => window.open('https://github.com/labring/FastGPT', '_blank')}
+            onClick={() => window.open('http://ai.shengfaxiang.top/', '_blank')}
           >
             Stars {(gitStar / 1000).toFixed(1)}k
           </Button>

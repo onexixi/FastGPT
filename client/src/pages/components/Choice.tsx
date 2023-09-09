@@ -11,13 +11,6 @@ const Choice = () => {
   const list = [
     ...(feConfigs?.show_git
       ? [
-          {
-            icon: '/imgs/home/icon_1.svg',
-            title: t('home.Choice Open'),
-            desc: t('home.Choice Open Desc', { title: feConfigs?.systemTitle }),
-            tooltip: '前往 GitHub',
-            onClick: () => window.open('https://github.com/labring/FastGPT', '_blank')
-          }
         ]
       : [
           {

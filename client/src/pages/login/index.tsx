@@ -98,7 +98,26 @@ const Login = () => {
           borderRadius={isPc ? 'md' : 'none'}
         >
           <DynamicComponent type={pageType} />
-
+        {feConfigs?.show_register && (
+          <Flex align={'center'} justifyContent={'space-between'} mt={3} color={'myBlue.600'}>
+            <Box
+              cursor={'pointer'}
+              _hover={{ textDecoration: 'underline' }}
+              onClick={() => setPageType('forgetPassword')}
+              fontSize="sm"
+            >
+              忘记密码?
+            </Box>
+            <Box
+              cursor={'pointer'}
+              _hover={{ textDecoration: 'underline' }}
+              onClick={() => setPageType('register')}
+              fontSize="sm"
+            >
+              注册账号
+            </Box>
+          </Flex>
+        )}
           {feConfigs?.show_contact && (
             <Box
               fontSize={'sm'}
