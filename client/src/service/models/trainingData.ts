@@ -28,13 +28,17 @@ const TrainingDataSchema = new Schema({
     enum: Object.keys(TrainingTypeMap),
     required: true
   },
+  vectorModel: {
+    type: String,
+    required: true,
+    default: 'text-embedding-ada-002'
+  },
   prompt: {
-    // 拆分时的提示词
+    // qa split prompt
     type: String,
     default: ''
   },
   q: {
-    // 如果是
     type: String,
     default: ''
   },
@@ -43,6 +47,10 @@ const TrainingDataSchema = new Schema({
     default: ''
   },
   source: {
+    type: String,
+    default: ''
+  },
+  file_id: {
     type: String,
     default: ''
   }

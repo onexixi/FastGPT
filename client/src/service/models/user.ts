@@ -26,7 +26,6 @@ const UserSchema = new Schema({
     default: '/icon/human.png'
   },
   balance: {
-    // 平台余额，不可提现
     type: Number,
     default: 2 * PRICE_SCALE
   },
@@ -35,22 +34,25 @@ const UserSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'user'
   },
-  promotion: {
-    rate: {
-      // 返现比例
-      type: Number,
-      default: 15
-    }
-  },
-  openaiKey: {
-    type: String,
-    default: ''
+  promotionRate: {
+    type: Number,
+    default: 15
   },
   limit: {
     exportKbTime: {
       // Every half hour
       type: Date
     }
+  },
+  openaiAccount: {
+    type: {
+      key: String,
+      baseUrl: String
+    }
+  },
+  timezone: {
+    type: String,
+    default: 'Asia/Shanghai'
   }
 });
 

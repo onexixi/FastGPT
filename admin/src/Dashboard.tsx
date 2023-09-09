@@ -107,7 +107,7 @@ export const Dashboard: React.FC = React.memo(() => {
       <div>
         <Space direction="vertical" style={{ width: '100%' }}>
           <Card bordered={false}>
-            <Typography.Title heading={5}>FastGpt Admin</Typography.Title>
+            <Typography.Title heading={5}>MI Admin</Typography.Title>
 
             <Divider />
 

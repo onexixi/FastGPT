@@ -1,8 +1,7 @@
 import { GET, POST, PUT, DELETE } from '../request';
-import type { KbItemType } from '@/types/plugin';
+import type { DatasetItemType, KbItemType, KbListItemType } from '@/types/plugin';
 import { RequestPaging } from '@/types/index';
 import { TrainingModeEnum } from '@/constants/plugin';
-import { type QuoteItemType } from '@/pages/api/openapi/kb/appKbSearch';
 import {
   Props as PushDataProps,
   Response as PushDateResponse
@@ -11,20 +10,17 @@ import {
   Props as SearchTestProps,
   Response as SearchTestResponse
 } from '@/pages/api/openapi/kb/searchTest';
-
-export type KbUpdateParams = {
-  id: string;
-  name: string;
-  tags: string;
-  avatar: string;
-};
+import { Response as KbDataItemType } from '@/pages/api/plugins/kb/data/getDataById';
+import { Props as UpdateDataProps } from '@/pages/api/openapi/kb/updateData';
+import type { KbUpdateParams, CreateKbParams } from '../request/kb';
+import { QuoteItemType } from '@/types/chat';
 
 /* knowledge base */
-export const getKbList = () => GET<KbItemType[]>(`/plugins/kb/list`);
+export const getKbList = () => GET<KbListItemType[]>(`/plugins/kb/list`);
 
 export const getKbById = (id: string) => GET<KbItemType>(`/plugins/kb/detail?id=${id}`);
 
-export const postCreateKb = (data: { name: string }) => POST<string>(`/plugins/kb/create`, data);
+export const postCreateKb = (data: CreateKbParams) => POST<string>(`/plugins/kb/create`, data);
 
 export const putKbById = (data: KbUpdateParams) => PUT(`/plugins/kb/update`, data);
 
@@ -59,6 +55,9 @@ export const getTrainingData = (data: { kbId: string; init: boolean }) =>
     vectorListLen: number;
   }>(`/plugins/kb/data/getTrainingData`, data);
 
+/* get length of system training queue */
+export const getTrainingQueueLen = () => GET<number>(`/plugins/kb/data/getQueueLen`);
+
 export const getKbDataItemById = (dataId: string) =>
   GET<QuoteItemType>(`/plugins/kb/data/getDataById`, { dataId });
 
@@ -69,10 +68,15 @@ export const postKbDataFromList = (data: PushDataProps) =>
   POST<PushDateResponse>(`/openapi/kb/pushData`, data);
 
 /**
+ * insert one data to dataset
+ */
+export const insertData2Kb = (data: { kbId: string; data: DatasetItemType }) =>
+  POST<string>(`/plugins/kb/data/insertData`, data);
+
+/**
  * 更新一条数据
  */
-export const putKbDataById = (data: { dataId: string; a: string; q?: string }) =>
-  PUT('/openapi/kb/updateData', data);
+export const putKbDataById = (data: UpdateDataProps) => PUT('/openapi/kb/updateData', data);
 /**
  * 删除一条知识库数据
  */

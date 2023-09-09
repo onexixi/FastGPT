@@ -57,7 +57,7 @@ const MermaidBlock = ({ code }: { code: string }) => {
         const { svg } = await mermaid.render(`mermaid-${Date.now()}`, formatCode);
         setSvg(svg);
       } catch (e: any) {
-        console.log('[Mermaid] ', e?.message);
+        // console.log('[Mermaid] ', e?.message);
       }
     })();
   }, [code]);
@@ -80,7 +80,7 @@ const MermaidBlock = ({ code }: { code: string }) => {
     ctx.fillRect(0, 0, w, h);
 
     const img = new Image();
-    img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(ref.current.innerHTML)}`;
+    img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(ref.current?.innerHTML)}`;
 
     img.onload = () => {
       ctx.drawImage(img, 0, 0, w, h);

@@ -1,25 +1,25 @@
 import { Pool } from 'pg';
 import type { QueryResultRow } from 'pg';
+import { PgTrainingTableName } from '@/constants/plugin';
+import { addLog } from './utils/tools';
+import { DatasetItemType } from '@/types/plugin';
 
-export const connectPg = async () => {
+export const connectPg = async (): Promise<Pool> => {
   if (global.pgClient) {
     return global.pgClient;
   }
 
   global.pgClient = new Pool({
-    host: process.env.PG_HOST,
-    port: process.env.PG_PORT ? +process.env.PG_PORT : 5432,
-    user: process.env.PG_USER,
-    password: process.env.PG_PASSWORD,
-    database: process.env.PG_DB_NAME,
+    connectionString: process.env.PG_URL,
     max: Number(process.env.DB_MAX_LINK || 5),
-    idleTimeoutMillis: 30000,
+    keepAlive: true,
     connectionTimeoutMillis: 5000
   });
 
   global.pgClient.on('error', (err) => {
     console.log(err);
     global.pgClient = null;
+    connectPg();
   });
 
   try {
@@ -28,7 +28,7 @@ export const connectPg = async () => {
     return global.pgClient;
   } catch (error) {
     global.pgClient = null;
-    return Promise.reject(error);
+    return connectPg();
   }
 };
 
@@ -45,7 +45,7 @@ type DeleteProps = {
   where: WhereProps;
 };
 
-type ValuesProps = { key: string; value: string | number }[];
+type ValuesProps = { key: string; value?: string | number }[];
 type UpdateProps = {
   values: ValuesProps;
   where: WhereProps;
@@ -144,7 +144,9 @@ class Pg {
     }
 
     const fields = props.values[0].map((item) => item.key).join(',');
-    const sql = `INSERT INTO ${table} (${fields}) VALUES ${this.getInsertValStr(props.values)} `;
+    const sql = `INSERT INTO ${table} (${fields}) VALUES ${this.getInsertValStr(
+      props.values
+    )} RETURNING id`;
     const pg = await connectPg();
     return pg.query(sql);
   }
@@ -166,21 +168,44 @@ export const insertKbItem = ({
 }: {
   userId: string;
   kbId: string;
-  data: {
+  data: (DatasetItemType & {
     vector: number[];
-    q: string;
-    a: string;
-    source?: string;
-  }[];
+  })[];
 }) => {
-  return PgClient.insert('modelData', {
+  return PgClient.insert(PgTrainingTableName, {
     values: data.map((item) => [
       { key: 'user_id', value: userId },
       { key: 'kb_id', value: kbId },
       { key: 'source', value: item.source?.slice(0, 30)?.trim() || '' },
+      { key: 'file_id', value: item.file_id },
       { key: 'q', value: item.q.replace(/'/g, '"') },
       { key: 'a', value: item.a.replace(/'/g, '"') },
       { key: 'vector', value: `[${item.vector}]` }
     ])
   });
 };
+
+export async function initPg() {
+  try {
+    await connectPg();
+    await PgClient.query(`
+      CREATE EXTENSION IF NOT EXISTS vector;
+      CREATE TABLE IF NOT EXISTS ${PgTrainingTableName} (
+          id BIGSERIAL PRIMARY KEY,
+          vector VECTOR(1536) NOT NULL,
+          user_id VARCHAR(50) NOT NULL,
+          kb_id VARCHAR(50),
+          source VARCHAR(100),
+          file_id VARCHAR(100),
+          q TEXT NOT NULL,
+          a TEXT
+      );
+      CREATE INDEX IF NOT EXISTS modelData_userId_index ON ${PgTrainingTableName} USING HASH (user_id);
+      CREATE INDEX IF NOT EXISTS modelData_kbId_index ON ${PgTrainingTableName} USING HASH (kb_id);
+      CREATE INDEX IF NOT EXISTS idx_model_data_md5_q_a_user_id_kb_id ON ${PgTrainingTableName} (md5(q), md5(a), user_id, kb_id);
+    `);
+    console.log('init pg successful');
+  } catch (error) {
+    addLog.error('init pg error', error);
+  }
+}

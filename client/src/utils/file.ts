@@ -2,8 +2,28 @@ import mammoth from 'mammoth';
 import Papa from 'papaparse';
 import { getOpenAiEncMap } from './plugin/openai';
 import { getErrText } from './tools';
-import { OpenAiChatEnum } from '@/constants/model';
-import { uploadImg } from '@/api/system';
+import { uploadImg, postUploadFiles } from '@/api/system';
+
+/**
+ * upload file to mongo gridfs
+ */
+export const uploadFiles = (
+  files: File[],
+  metadata: Record<string, any> = {},
+  percentListen?: (percent: number) => void
+) => {
+  const form = new FormData();
+  form.append('metadata', JSON.stringify(metadata));
+  files.forEach((file) => {
+    form.append('file', file, encodeURIComponent(file.name));
+  });
+  return postUploadFiles(form, (e) => {
+    if (!e.total) return;
+
+    const percent = Math.round((e.loaded / e.total) * 100);
+    percentListen && percentListen(percent);
+  });
+};
 
 /**
  * 读取 txt 文件内容
@@ -38,7 +58,11 @@ export const readPdfContent = (file: File) =>
       const readPDFPage = async (doc: any, pageNo: number) => {
         const page = await doc.getPage(pageNo);
         const tokenizedText = await page.getTextContent();
-        const pageText = tokenizedText.items.map((token: any) => token.str).join(' ');
+
+        const pageText = tokenizedText.items
+          .map((token: any) => token.str)
+          .filter((item: string) => item)
+          .join('');
         return pageText;
       };
 
@@ -55,12 +79,12 @@ export const readPdfContent = (file: File) =>
           const pageTexts = await Promise.all(pageTextPromises);
           resolve(pageTexts.join('\n'));
         } catch (err) {
-          console.log(err, 'pdfjs error');
+          console.log(err, 'pdf load error');
           reject('解析 PDF 失败');
         }
       };
       reader.onerror = (err) => {
-        console.log(err, 'reader error');
+        console.log(err, 'pdf load error');
         reject('解析 PDF 失败');
       };
     } catch (error) {
@@ -84,10 +108,18 @@ export const readDocContent = (file: File) =>
           });
           resolve(res?.value);
         } catch (error) {
+          window.umami?.track('wordReadError', {
+            err: error?.toString()
+          });
+          console.log('error doc read:', error);
+
           reject('读取 doc 文件失败, 请转换成 PDF');
         }
       };
       reader.onerror = (err) => {
+        window.umami?.track('wordReadError', {
+          err: err?.toString()
+        });
         console.log('error doc read:', err);
 
         reject('读取 doc 文件失败');
@@ -145,37 +177,45 @@ export const fileDownload = ({
 /**
  * text split into chunks
  * maxLen - one chunk len. max: 3500
- * slideLen - The size of the before and after Text
- * maxLen > slideLen
+ * overlapLen - The size of the before and after Text
+ * maxLen > overlapLen
  */
-export const splitText_token = ({ text, maxLen }: { text: string; maxLen: number }) => {
-  const slideLen = Math.floor(maxLen * 0.3);
+export const splitText2Chunks = ({ text, maxLen }: { text: string; maxLen: number }) => {
+  const overlapLen = Math.floor(maxLen * 0.25); // Overlap length
 
   try {
-    const enc = getOpenAiEncMap();
-    // filter empty text. encode sentence
-    const encodeText = enc.encode(text);
-
+    const splitTexts = text.split(/(?<=[。！？；.!?;])/g);
     const chunks: string[] = [];
-    let tokens = 0;
 
-    let startIndex = 0;
-    let endIndex = Math.min(startIndex + maxLen, encodeText.length);
-    let chunkEncodeArr = encodeText.slice(startIndex, endIndex);
-
-    const decoder = new TextDecoder();
-
-    while (startIndex < encodeText.length) {
-      tokens += chunkEncodeArr.length;
-      chunks.push(decoder.decode(enc.decode(chunkEncodeArr)));
-
-      startIndex += maxLen - slideLen;
-      endIndex = Math.min(startIndex + maxLen, encodeText.length);
-      chunkEncodeArr = encodeText.slice(
-        Math.min(encodeText.length - slideLen, startIndex),
-        endIndex
-      );
+    let preChunk = '';
+    let chunk = '';
+    for (let i = 0; i < splitTexts.length; i++) {
+      const text = splitTexts[i];
+      chunk += text;
+      if (chunk.length > maxLen - overlapLen) {
+        preChunk += text;
+      }
+      if (chunk.length >= maxLen) {
+        chunks.push(chunk);
+        chunk = preChunk;
+        preChunk = '';
+      }
     }
+
+    if (chunk) {
+      chunks.push(chunk);
+    }
+
+    const tokens = (() => {
+      try {
+        const enc = getOpenAiEncMap();
+        const encodeText = enc.encode(chunks.join(''));
+        const tokens = encodeText.length;
+        return tokens;
+      } catch (error) {
+        return chunks.join('').length;
+      }
+    })();
 
     return {
       chunks,
@@ -268,3 +308,14 @@ export const compressImg = ({
       reject('压缩图片异常');
     };
   });
+
+/* simple text, remove chinese space and extra \n */
+export const simpleText = (text: string) => {
+  text = text.replace(/([\u4e00-\u9fa5])\s+([\u4e00-\u9fa5])/g, '$1$2');
+  text = text.replace(/\n{2,}/g, '\n');
+  text = text.replace(/\s{2,}/g, ' ');
+
+  text = text.replace(/[\x00-\x08]/g, ' ');
+
+  return text;
+};

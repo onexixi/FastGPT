@@ -5,13 +5,27 @@ export enum UserAuthTypeEnum {
 
 export const PRICE_SCALE = 100000;
 
+export const fileImgs = [
+  { suffix: 'pdf', src: '/imgs/files/pdf.svg' },
+  { suffix: 'csv', src: '/imgs/files/csv.svg' },
+  { suffix: '(doc|docs)', src: '/imgs/files/doc.svg' },
+  { suffix: 'txt', src: '/imgs/files/txt.svg' },
+  { suffix: 'md', src: '/imgs/files/markdown.svg' }
+];
+
+export enum TrackEventName {
+  windowError = 'windowError',
+  pageError = 'pageError',
+  wordReadError = 'wordReadError'
+}
+
 export const htmlTemplate = `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width initial-scale=1.0" />
-    <title>MI TALK</title>
+    <title>FastGPT</title>
   </head>
   <style>
     .markdown > :first-child {

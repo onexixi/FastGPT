@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
-import { Box, Grid, useTheme } from '@chakra-ui/react';
+import { Box, Grid } from '@chakra-ui/react';
 import type { GridProps } from '@chakra-ui/react';
+import { useTranslation } from 'react-i18next';
 
 // @ts-ignore
 interface Props extends GridProps {
@@ -11,7 +12,7 @@ interface Props extends GridProps {
 }
 
 const Tabs = ({ list, size = 'md', activeId, onChange, ...props }: Props) => {
-  const theme = useTheme();
+  const { t } = useTranslation();
   const sizeMap = useMemo(() => {
     switch (size) {
       case 'sm':
@@ -41,20 +42,23 @@ const Tabs = ({ list, size = 'md', activeId, onChange, ...props }: Props) => {
       p={sizeMap.outP}
       borderRadius={'sm'}
       fontSize={sizeMap.fontSize}
+      overflowX={'auto'}
       {...props}
     >
       {list.map((item) => (
         <Box
           key={item.id}
           py={sizeMap.inlineP}
-          borderRadius={'sm'}
           textAlign={'center'}
+          borderBottom={'2px solid transparent'}
+          px={3}
+          whiteSpace={'nowrap'}
           {...(activeId === item.id
             ? {
-                boxShadow: '0px 2px 2px rgba(137, 156, 171, 0.25)',
-                backgroundImage: theme.lgColor.primary2,
-                color: 'white',
-                cursor: 'default'
+                color: 'myBlue.700',
+                cursor: 'default',
+                fontWeight: 'bold',
+                borderBottomColor: 'myBlue.700'
               }
             : {
                 cursor: 'pointer'
@@ -64,7 +68,7 @@ const Tabs = ({ list, size = 'md', activeId, onChange, ...props }: Props) => {
             onChange(item.id);
           }}
         >
-          {item.label}
+          {t(item.label) || item.label}
         </Box>
       ))}
     </Grid>

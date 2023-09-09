@@ -46,7 +46,7 @@ function App() {
   return (
     <Tushan
       basename="/"
-      header={'FastGpt-Admin'}
+      header={'MIGpt-Admin'}
       i18n={i18n}
       dataProvider={dataProvider}
       authProvider={authProvider}

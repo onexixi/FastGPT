@@ -1,20 +1,19 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { jsonRes } from '@/service/response';
-import { connectToDatabase, TrainingData } from '@/service/mongo';
+import { connectToDatabase, TrainingData, KB } from '@/service/mongo';
 import { authUser } from '@/service/utils/auth';
 import { authKb } from '@/service/utils/auth';
 import { withNextCors } from '@/service/utils/tools';
-import { TrainingModeEnum } from '@/constants/plugin';
+import { PgTrainingTableName, TrainingModeEnum } from '@/constants/plugin';
 import { startQueue } from '@/service/utils/tools';
 import { PgClient } from '@/service/pg';
 import { modelToolMap } from '@/utils/plugin';
-import { OpenAiChatEnum } from '@/constants/model';
-
-type DateItemType = { a: string; q: string; source?: string };
+import { getVectorModel } from '@/service/utils/data';
+import { DatasetItemType } from '@/types/plugin';
 
 export type Props = {
   kbId: string;
-  data: DateItemType[];
+  data: DatasetItemType[];
   mode: `${TrainingModeEnum}`;
   prompt?: string;
 };
@@ -23,18 +22,27 @@ export type Response = {
   insertLen: number;
 };
 
-const modeMaxToken = {
-  [TrainingModeEnum.index]: 6000,
-  [TrainingModeEnum.qa]: 10000
+const modeMap = {
+  [TrainingModeEnum.index]: true,
+  [TrainingModeEnum.qa]: true
 };
 
 export default withNextCors(async function handler(req: NextApiRequest, res: NextApiResponse<any>) {
   try {
-    const { kbId, data, mode, prompt } = req.body as Props;
+    const { kbId, data, mode = TrainingModeEnum.index, prompt } = req.body as Props;
 
     if (!kbId || !Array.isArray(data)) {
-      throw new Error('缺少参数');
+      throw new Error('KbId or data is empty');
     }
+
+    if (modeMap[mode] === undefined) {
+      throw new Error('Mode is error');
+    }
+
+    if (data.length > 500) {
+      throw new Error('Data is too long, max 500');
+    }
+
     await connectToDatabase();
 
     // 凭证校验
@@ -64,27 +72,42 @@ export async function pushDataToKb({
   mode,
   prompt
 }: { userId: string } & Props): Promise<Response> {
-  await authKb({
-    userId,
-    kbId
-  });
+  const [kb, vectorModel] = await Promise.all([
+    authKb({
+      userId,
+      kbId
+    }),
+    (async () => {
+      if (mode === TrainingModeEnum.index) {
+        const vectorModel = (await KB.findById(kbId, 'vectorModel'))?.vectorModel;
+
+        return getVectorModel(vectorModel || global.vectorModels[0].model);
+      }
+      return global.vectorModels[0];
+    })()
+  ]);
+
+  const modeMaxToken = {
+    [TrainingModeEnum.index]: vectorModel.maxToken,
+    [TrainingModeEnum.qa]: global.qaModel.maxToken * 0.8
+  };
 
   // 过滤重复的 qa 内容
   const set = new Set();
-  const filterData: DateItemType[] = [];
+  const filterData: DatasetItemType[] = [];
 
   data.forEach((item) => {
+    if (!item.q) return;
+
     const text = item.q + item.a;
 
-    if (mode === TrainingModeEnum.qa) {
-      // count token
-      const token = modelToolMap.countTokens({
-        model: OpenAiChatEnum.GPT3516k,
-        messages: [{ obj: 'System', value: item.q }]
-      });
-      if (token > modeMaxToken[TrainingModeEnum.qa]) {
-        return;
-      }
+    // count q token
+    const token = modelToolMap.countTokens({
+      messages: [{ obj: 'System', value: item.q }]
+    });
+
+    if (token > modeMaxToken[mode]) {
+      return;
     }
 
     if (!set.has(text)) {
@@ -96,13 +119,10 @@ export async function pushDataToKb({
   // 数据库去重
   const insertData = (
     await Promise.allSettled(
-      filterData.map(async ({ q, a = '', source }) => {
+      filterData.map(async (data) => {
+        let { q, a } = data;
         if (mode !== TrainingModeEnum.index) {
-          return Promise.resolve({
-            q,
-            a,
-            source
-          });
+          return Promise.resolve(data);
         }
 
         if (!q) {
@@ -116,7 +136,7 @@ export async function pushDataToKb({
         try {
           const { rows } = await PgClient.query(`
             SELECT COUNT(*) > 0 AS exists
-            FROM  modelData 
+            FROM  ${PgTrainingTableName} 
             WHERE md5(q)=md5('${q}') AND md5(a)=md5('${a}') AND user_id='${userId}' AND kb_id='${kbId}'
           `);
           const exists = rows[0]?.exists || false;
@@ -128,41 +148,36 @@ export async function pushDataToKb({
           console.log(error);
           error;
         }
-        return Promise.resolve({
-          q,
-          a,
-          source
-        });
+        return Promise.resolve(data);
       })
     )
   )
     .filter((item) => item.status === 'fulfilled')
-    .map<DateItemType>((item: any) => item.value);
+    .map<DatasetItemType>((item: any) => item.value);
 
   // 插入记录
-  await TrainingData.insertMany(
+  const insertRes = await TrainingData.insertMany(
     insertData.map((item) => ({
-      q: item.q,
-      a: item.a,
-      source: item.source,
+      ...item,
       userId,
       kbId,
       mode,
-      prompt
+      prompt,
+      vectorModel: vectorModel.model
     }))
   );
 
-  insertData.length > 0 && startQueue();
+  insertRes.length > 0 && startQueue();
 
   return {
-    insertLen: insertData.length
+    insertLen: insertRes.length
   };
 }
 
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '20mb'
+      sizeLimit: '12mb'
     }
   }
 };

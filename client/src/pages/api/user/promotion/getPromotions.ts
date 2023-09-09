@@ -1,4 +1,3 @@
-// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { jsonRes } from '@/service/response';
 import { connectToDatabase, promotionRecord } from '@/service/mongo';
@@ -6,12 +5,10 @@ import { authUser } from '@/service/utils/auth';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    let { pageNum = 1, pageSize = 10 } = req.query as {
-      pageNum: string;
-      pageSize: string;
+    let { pageNum = 1, pageSize = 10 } = req.body as {
+      pageNum: number;
+      pageSize: number;
     };
-    pageNum = +pageNum;
-    pageSize = +pageSize;
 
     const { userId } = await authUser({ req, authToken: true });
 

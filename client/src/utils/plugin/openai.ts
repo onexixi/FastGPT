@@ -2,7 +2,6 @@ import { encoding_for_model } from '@dqbd/tiktoken';
 import type { ChatItemType } from '@/types/chat';
 import { ChatRoleEnum } from '@/constants/chat';
 import { ChatCompletionRequestMessageRoleEnum } from 'openai';
-import { OpenAiChatEnum } from '@/constants/model';
 import axios from 'axios';
 import type { MessageItemType } from '@/pages/api/openapi/v1/chat/completions';
 
@@ -42,42 +41,26 @@ export const adaptChatItem_openAI = ({
     [ChatRoleEnum.System]: ChatCompletionRequestMessageRoleEnum.System
   };
   return messages.map((item) => ({
-    ...(reserveId && { _id: item._id }),
+    ...(reserveId && { dataId: item.dataId }),
     role: map[item.obj] || ChatCompletionRequestMessageRoleEnum.System,
     content: item.value || ''
   }));
 };
 
-export function countOpenAIToken({
-  messages,
-  model
-}: {
-  messages: ChatItemType[];
-  model: `${OpenAiChatEnum}`;
-}) {
-  const diffVal = model.startsWith('gpt-3.5-turbo') ? 3 : 2;
-
+export function countOpenAIToken({ messages }: { messages: ChatItemType[] }) {
   const adaptMessages = adaptChatItem_openAI({ messages, reserveId: true });
   const token = adaptMessages.reduce((sum, item) => {
     const text = `${item.role}\n${item.content}`;
     const enc = getOpenAiEncMap();
     const encodeText = enc.encode(text);
-    const tokens = encodeText.length + diffVal;
+    const tokens = encodeText.length + 3; // 补充估算值
     return sum + tokens;
   }, 0);
 
   return token;
 }
 
-export const openAiSliceTextByToken = ({
-  model = OpenAiChatEnum.GPT35,
-  text,
-  length
-}: {
-  model: `${OpenAiChatEnum}`;
-  text: string;
-  length: number;
-}) => {
+export const openAiSliceTextByToken = ({ text, length }: { text: string; length: number }) => {
   const enc = getOpenAiEncMap();
   const encodeText = enc.encode(text);
   const decoder = new TextDecoder();
