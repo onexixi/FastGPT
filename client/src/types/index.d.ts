@@ -44,6 +44,7 @@ declare global {
   var qaQueueLen: number;
   var vectorQueueLen: number;
   var OpenAiEncMap: Tiktoken;
+  var grecaptcha: any;
 
   var logger: Logger;
 
