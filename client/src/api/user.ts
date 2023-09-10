@@ -10,7 +10,7 @@ export const sendAuthCode = (data: {
   username: string;
   type: `${UserAuthTypeEnum}`;
   googleToken: string;
-}) => POST(`/plusApi/user/account/sendCode`, data);
+}) => POST(`/user/account/sendCode`, data);
 
 export const getTokenLogin = () => GET<UserType>('/user/account/tokenLogin');
 export const gitLogin = (params: { code: string; inviterId?: string }) =>
@@ -27,7 +27,7 @@ export const postRegister = ({
   password: string;
   inviterId?: string;
 }) =>
-  POST<ResLogin>(`/plusApi/user/account/register`, {
+  POST<ResLogin>(`/user/account/register`, {
     username,
     code,
     inviterId,
