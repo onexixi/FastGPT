@@ -44,16 +44,16 @@ const Account = ({ currentTab }: { currentTab: `${TabEnum}` }) => {
     },
     ...(feConfigs?.show_userDetail
       ? [
-          {
-            icon: 'promotionLight',
-            label: t('user.Promotion Record'),
-            id: TabEnum.promotion
-          },
-          {
-            icon: 'payRecordLight',
-            label: t('user.Recharge Record'),
-            id: TabEnum.pay
-          }
+          // {
+          //   icon: 'promotionLight',
+          //   label: t('user.Promotion Record'),
+          //   id: TabEnum.promotion
+          // },
+          // {
+          //   icon: 'payRecordLight',
+          //   label: t('user.Recharge Record'),
+          //   id: TabEnum.pay
+          // }
         ]
       : []),
     {
@@ -134,8 +134,8 @@ const Account = ({ currentTab }: { currentTab: `${TabEnum}` }) => {
 
         <Box flex={'1 0 0'} h={'100%'} pb={[4, 0]}>
           {currentTab === TabEnum.info && <UserInfo />}
-          {currentTab === TabEnum.promotion && <Promotion />}
-          {/*{currentTab === TabEnum.bill && <BillTable />}*/}
+          {/*{currentTab === TabEnum.promotion && <Promotion />}*/}
+          {currentTab === TabEnum.bill && <BillTable />}
           {/*{currentTab === TabEnum.pay && <PayRecordTable />}*/}
           {currentTab === TabEnum.inform && <InformTable />}
         </Box>
