@@ -26,7 +26,7 @@ export const openaiError: Record<string, string> = {
 };
 export const openaiAccountError: Record<string, string> = {
   insufficient_quota: 'API 余额不足',
-  invalid_api_key: 'openai 账号异常',
+  invalid_api_key: ' 账号异常',
   account_deactivated: '账号已停用',
   invalid_request_error: '无效请求'
 };

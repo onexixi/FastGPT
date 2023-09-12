@@ -202,7 +202,7 @@ const UserInfo = () => {
               >
                 <Avatar src={'/imgs/openai.png'} w={'18px'} />
                 <Box ml={2} flex={1}>
-                  OpenAI 账号
+                   AI 账号
                 </Box>
                 <Box
                   w={'9px'}

@@ -74,45 +74,24 @@ const PayModal = ({ onClose }: { onClose: () => void }) => {
       <ModalBody py={0}>
         {!payId && (
           <>
-            <Grid gridTemplateColumns={'repeat(4,1fr)'} gridGap={5} mb={4}>
-              {[10, 20, 50, 100].map((item) => (
-                <Button
-                  key={item}
-                  variant={item === inputVal ? 'solid' : 'outline'}
-                  onClick={() => setInputVal(item)}
-                >
-                  {item}元
-                </Button>
-              ))}
-            </Grid>
-            <Box mb={4}>
-              <Input
-                value={inputVal}
-                type={'number'}
-                step={1}
-                placeholder={'其他金额，请取整数'}
-                onChange={(e) => {
-                  setInputVal(Math.floor(+e.target.value));
-                }}
-              ></Input>
-            </Box>
             <Markdown
               source={`
+**充值请联系管理员**              
 | 计费项 | 价格: 元/ 1K tokens(包含上下文)|
 | --- | --- |
 | 知识库 - 索引 | 0.002 |
-| FastAI4k - 对话 | 0.015 |
-| FastAI16k - 对话 | 0.03 |
-| FastAI-Plus - 对话 | 0.45 |
+| AI4k - 对话 | 0.015 |
+| AI16k - 对话 | 0.03 |
+| AI-Plus - 对话 | 0.45 |
 | 文件QA拆分 | 0.03 |`}
             />
           </>
         )}
-        {/* 付费二维码 */}
-        <Box textAlign={'center'}>
-          {payId && <Box mb={3}>请微信扫码支付: {inputVal}元，请勿关闭页面</Box>}
-          <Box id={'payQRCode'} display={'inline-block'}></Box>
-        </Box>
+        {/*/!* 付费二维码 *!/*/}
+        {/*<Box textAlign={'center'}>*/}
+        {/*  {payId && <Box mb={3}>请微信扫码支付: {inputVal}元，请勿关闭页面</Box>}*/}
+        {/*  <Box id={'payQRCode'} display={'inline-block'}></Box>*/}
+        {/*</Box>*/}
       </ModalBody>
 
       <ModalFooter>
@@ -121,14 +100,14 @@ const PayModal = ({ onClose }: { onClose: () => void }) => {
             <Button variant={'base'} onClick={onClose}>
               取消
             </Button>
-            <Button
-              ml={3}
-              isLoading={loading}
-              isDisabled={!inputVal || inputVal === 0}
-              onClick={handleClickPay}
-            >
-              获取充值二维码
-            </Button>
+            {/*<Button*/}
+            {/*  ml={3}*/}
+            {/*  isLoading={loading}*/}
+            {/*  isDisabled={!inputVal || inputVal === 0}*/}
+            {/*  onClick={handleClickPay}*/}
+            {/*>*/}
+            {/*  获取充值二维码*/}
+            {/*</Button>*/}
           </>
         )}
       </ModalFooter>

@@ -71,37 +71,37 @@ services:
       - PG_PASSWORD=1234
       - PG_DB_NAME=fastgpt
       # openai 相关配置：使用了 oneapi 后，下面只需要填下 OPENAI_BASE_URL （国外可全忽略）
-      - OPENAIKEY=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
+      - OPENAIKEY=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
       - OPENAI_BASE_URL=https://openai-forward-ye2n.onrender.com/v1
       - OPENAI_BASE_URL_AUTH=auth
       # root 密码，用户名为: root
       - DEFAULT_ROOT_PSW=1234
       # 中转地址，如果是用官方号，不需要管
-      - CHAT_API_KEY=sk-xxxx
+      - CHAT_API_KEY=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
       - FILE_TOKEN_KEY=filetoken
       # mongo 配置，不需要改. 如果连不上，可能需要去掉 ?authSource=admin
       - MONGODB_URI=mongodb://username:password@mongo:27017/fastgpt?authSource=admin
       # pg配置. 不需要改
       - PG_URL=postgresql://fastgpt:1234@pg:5432/fastgpt
-  fastgpt-admin:
-    image: registry.cn-hangzhou.aliyuncs.com/fastgpt/fastgpt-admin:latest
-    container_name: fastgpt-admin
-    restart: always
-    ports:
-      - 3001:3001
-    networks:
-      - fastgpt
-    depends_on:
-      - mongo
-      - fastgpt
-    environment:
-      - MONGODB_URI=mongodb://username:password@mongo:27017/?authSource=admin
-      - MONGODB_NAME=fastgpt
-      - ADMIN_USER=username
-      - ADMIN_PASS=password
-      - ADMIN_SECRET=any
-      - PARENT_URL=http://fastgpt:3000
-      - PARENT_ROOT_KEY=root_key
+#  fastgpt-admin:
+#    image: registry.cn-hangzhou.aliyuncs.com/fastgpt/fastgpt-admin:latest
+#    container_name: fastgpt-admin
+#    restart: always
+#    ports:
+#      - 3001:3001
+#    networks:
+#      - fastgpt
+#    depends_on:
+#      - mongo
+#      - fastgpt
+#    environment:
+#      - MONGODB_URI=mongodb://username:password@mongo:27017/?authSource=admin
+#      - MONGODB_NAME=fastgpt
+#      - ADMIN_USER=username
+#      - ADMIN_PASS=password
+#      - ADMIN_SECRET=any
+#      - PARENT_URL=http://fastgpt:3000
+#      - PARENT_ROOT_KEY=root_key
   keyadmin:
     container_name: keyadmin
     image: justsong/one-api
